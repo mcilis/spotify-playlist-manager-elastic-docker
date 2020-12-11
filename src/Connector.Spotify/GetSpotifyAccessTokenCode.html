@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Spotify API Initial Configuration and Getting Refresh Token</title>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Spotify API Initial Configuration and Getting Refresh Token</h1>
+	
+    <h2>Register Your App to Your Spotify Developer Account</h2>
+	<ul>
+		<li>Go to your dashboard in https://developer.spotify.com/dashboard/applications</li>
+		<li>Create a client id</li>
+		<li>Add 'http://localhost/callback/' to your Redirect URIs</li>
+		<li>Update the App.config.AppSettings.ClientId value with this client id</li>
+		<li>Change the CLIENT_ID in the source code of this document with this client id</li>
+	</ul>
+
+    <h2>Getting Access Code</h2>
+    <p>Log in with your Spotify account and the return url will include a query string parameter named 'Code'</p>
+    <button class="btn btn-primary" id="btn-login">Login</button>
+	
+	<h2>Generating the Refresh Token</h2>
+	<ul>
+		<li>Copy that code string to App.config.AppSettings.Code field of SpotifyPlaylistManager app</li>
+		<li>Change the App.config.AppSettings.AuhorizationMode value to 'InitialConfiguration'</li>
+		<li>Run the application</li>
+		<li>Check the Log file for new RefreshToken</li>
+		<li>Update the App.config.AppSettings.AuhorizationMode value to 'RefreshToken'</li>
+		<li>Update the App.config.AppSettings.RefreshToken value to new value</li>
+		<li>Restart the application</li>
+	</ul>
+</div>
+
+  <script type="text/javascript">
+(function() {
+    
+    function login(callback) {
+        var CLIENT_ID = 'e4781e6d3a3d439b931a8c4e62ececf8';
+        var REDIRECT_URI = 'http://localhost/callback/';
+        function getLoginURL(scopes) {
+            return 'https://accounts.spotify.com/authorize?client_id=' + CLIENT_ID +
+              '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+              '&scope=' + encodeURIComponent(scopes.join(' ')) +
+              '&response_type=code';
+        }
+        
+        var url = getLoginURL([
+            'user-read-email'
+        ]);
+        
+        var width = 450,
+            height = 730,
+            left = (screen.width / 2) - (width / 2),
+            top = (screen.height / 2) - (height / 2);
+       
+        var w = window.open(url,
+                            'Spotify',
+                            'menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=' + width + ', height=' + height + ', top=' + top + ', left=' + left
+                           );
+        
+    }
+	var loginButton = document.getElementById('btn-login');
+    loginButton.addEventListener('click', function() {
+        login(function(accessToken) {
+        	console.log('accessToken: ' + accessToken);           
+            });
+    });    
+})();
+</script>
+
+</body>
+</html>

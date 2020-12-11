@@ -1,0 +1,11 @@
+
+version: '3.4'
+
+services:
+  worker:
+    image: worker
+    build:
+      context: .
+      dockerfile: Worker/Dockerfile
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw

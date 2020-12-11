@@ -1,0 +1,92 @@
+
+version: '3.4'
+
+services:
+  proxy:
+    image: nginx:latest
+    volumes:
+      - ./containers/proxy/nginx.conf:/etc/nginx/nginx.conf
+      - ./containers/proxy/certs/:/etc/certs/
+      - ./containers/proxy/index.html:/usr/share/nginx/html/index.html
+    ports:
+      - 443:443
+    networks:
+      - spotify
+    depends_on:
+      - kibana
+
+  worker:
+    image: worker
+    build:
+      context: ./src
+      dockerfile: Worker/Dockerfile
+    volumes:
+      - ./database:/app/data
+    env_file:
+      - ./.env
+    networks:
+      - spotify
+    depends_on:
+      - elasticsearch       
+
+  elasticsearch:
+    build:
+      context: ./containers/elasticsearch/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - type: bind
+        source: ./containers/elasticsearch/config/elasticsearch.yml
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+        read_only: true
+      - type: volume
+        source: elasticsearch
+        target: /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - spotify
+
+  kibana:
+    build:
+      context: ./containers/kibana/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - type: bind
+        source: ./containers/kibana/config/kibana.yml
+        target: /usr/share/kibana/config/kibana.yml
+        read_only: true
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_URI}
+      - SERVER_BASEPATH=${KIBANA_BASEPATH}
+      - SERVER_HOST=${KIBANA_SERVERHOST}
+      - SERVER_NAME=${KIBANA_SERVERNAME}
+    networks:
+      - spotify
+    links:
+      - elasticsearch
+    depends_on:
+      - elasticsearch
+      
+networks:
+  spotify:
+    driver: bridge
+    
+volumes:
+  database:
+  elasticsearch:
