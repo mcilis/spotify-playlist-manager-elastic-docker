@@ -2,8 +2,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 
 namespace Connector.Radio
 {
@@ -28,11 +26,6 @@ namespace Connector.Radio
                 x.BaseAddress = new Uri(radioConfiguration["JoyTurkRock:BaseAddress"]);
             });
 
-            services.AddHttpClient("RedFm", x =>
-            {
-                x.BaseAddress = new Uri(radioConfiguration["RedFm:BaseAddress"]);
-            });
-
             services.AddHttpClient("Veronica", x =>
             {
                 x.BaseAddress = new Uri(radioConfiguration["Veronica:BaseAddress"]);
@@ -43,6 +36,11 @@ namespace Connector.Radio
                 x.BaseAddress = new Uri(radioConfiguration["VeronicaRock:BaseAddress"]);
             });
 
+            services.AddHttpClient("SlowTime", x =>
+            {
+                x.BaseAddress = new Uri(radioConfiguration["SlowTime:BaseAddress"]);
+            });
+
             var serviceProvider = services.BuildServiceProvider();
             var httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
 
@@ -50,9 +48,9 @@ namespace Connector.Radio
             radioFactory.Register(new Eksen(httpClientFactory, configuration));
             radioFactory.Register(new JoyFm(httpClientFactory, configuration));
             radioFactory.Register(new JoyTurkRock(httpClientFactory, configuration));
-            radioFactory.Register(new RedFm(httpClientFactory, configuration));
             radioFactory.Register(new Veronica(httpClientFactory, configuration));
             radioFactory.Register(new VeronicaRock(httpClientFactory, configuration));
+            radioFactory.Register(new SlowTime(httpClientFactory, configuration));
 
             services.AddSingleton<IRadioFactory>(radioFactory);
 

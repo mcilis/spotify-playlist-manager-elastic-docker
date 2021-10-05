@@ -7,17 +7,17 @@ using Serilog;
 
 namespace Connector.Radio
 {
-    internal class RedFm : IRadio
+    internal class SlowTime : IRadio
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfigurationSection _radioConfiguration;
 
-        public string Name => "RedFm";   
+        public string Name => "SlowTime";   
 
-        public RedFm(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public SlowTime(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
-            _radioConfiguration = configuration.GetSection("Connector.Radio:RedFm");
+            _radioConfiguration = configuration.GetSection("Connector.Radio:SlowTime");
         }    
 
         public async Task<string> GetCurrentSongAsync()
@@ -35,23 +35,11 @@ namespace Connector.Radio
                 {
                     using var document = JsonDocument.Parse(responseContent, new JsonDocumentOptions { AllowTrailingCommas = true });
 
-                    var items = document.RootElement.GetProperty("feed").GetProperty("items").EnumerateArray();
+                    var artistName = document.RootElement.GetProperty("Artist").GetString();
+                    var trackName = document.RootElement.GetProperty("Title").GetString();
+                    var song = $"{trackName.Trim().Replace(" ", "+")}+{artistName.Trim().Replace(" ", "+")}".Trim('+');
 
-                    foreach (var item in items)
-                    {
-                        var type = item.GetProperty("type").GetString();
-
-                        if (type != "song")
-                        {
-                            continue;
-                        }
-
-                        var artistName = item.GetProperty("title").GetString();
-                        var trackName = item.GetProperty("desc").GetString();
-                        var song = $"{trackName.Trim().Replace(" ", "+")}+{artistName.Trim().Replace(" ", "+")}";
-
-                        return song;
-                    }
+                    return song;
                 }
                 catch (Exception exception)
                 {
@@ -65,3 +53,5 @@ namespace Connector.Radio
         }
     }
 }
+
+// {"Time":"16:37:46","Artist":"COLDPLAY","Title":"INK","Duration":"03:34.5","Cover":""}
